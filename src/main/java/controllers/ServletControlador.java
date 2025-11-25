@@ -1,5 +1,10 @@
-package controllers;
+/*
+ * Autor: Erick Sanguña
+ * Descripción: Servlet de control que administra el flujo entre vistas y
+ * asigna objetos Rectangulo a diferentes alcances (request, session, application).
+ */
 
+package controllers;
 
 import Modelos.Rectangulo;
 import jakarta.servlet.ServletContext;
@@ -11,58 +16,78 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+/*
+ * Configura este servlet para atender la ruta /ServletControlador
+ * Tanto para GET como POST.
+ */
 @WebServlet(name = "ServletControlador", urlPatterns = {"/ServletControlador"})
 public class ServletControlador extends HttpServlet {
-   protected void  processRequest(HttpServletRequest request, HttpServletResponse response)
-   throws ServletException, IOException {
-       // 1. Procesamos parámetros
-       String accion = request.getParameter("accion");
-       // 2. Creamos los JavaBeans (clases de Modelo)
-       Rectangulo rectanguloRequest = new  Rectangulo(2, 1);
-       Rectangulo rectanguloSession = new  Rectangulo(3, 4);
-       Rectangulo rectanguloApplication = new Rectangulo(5, 6);
 
-       // 3. Agregamos el JavaBean a algún alcance (request, session, application)
-       if ("agregarVariables".equals(accion)){
-           // Alcance request
-           request.setAttribute("rectanguloRequest", rectanguloRequest);
-           // Alcance session
-           HttpSession session = request.getSession();
-           session.setAttribute("rectanguloSession", rectanguloSession);
-           // Alcance application
-           ServletContext application = request.getServletContext();
-           application.setAttribute("rectanguloApplication", rectanguloApplication);
-           // Agregamos un mensaje
-           request.setAttribute("mensaje", "Las variables fueron agregadas");
-           // 4. Redireccionamos al jsp de index
-           request.getRequestDispatcher("index.jsp").forward(request, response);
-       } else if ("listarVariables".equals(accion)) {
-           // Redirigimos al jsp que despliega las variables
-           request.getRequestDispatcher("/META-INF/alcanceVariables.jsp").forward(request, response);
+    /*
+     * Método central del servlet.
+     * Se ejecuta tanto en GET como POST.
+     */
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-       }
-       else {
-           // Redirige a la página de inicio
-           request.setAttribute("mensaje", "Accion no proporcionada o desconocidas");
-           request.getRequestDispatcher("index.jsp").forward(request, response);
+        // 1. Obtención del parámetro 'accion' desde el formulario o URL
+        String accion = request.getParameter("accion");
 
-       }
+        // 2. Creación de objetos JavaBean Rectangulo (Modelo)
+        Rectangulo rectanguloRequest = new Rectangulo(2, 1);
+        Rectangulo rectanguloSession = new Rectangulo(3, 4);
+        Rectangulo rectanguloApplication = new Rectangulo(5, 6);
 
-   }
+        // 3. Evaluación de la acción recibida
+        if ("agregarVariables".equals(accion)) {
+
+            // Asignación al alcance REQUEST (solo para la petición actual)
+            request.setAttribute("rectanguloRequest", rectanguloRequest);
+
+            // Asignación al alcance SESSION (permanece mientras la sesión esté activa)
+            HttpSession session = request.getSession();
+            session.setAttribute("rectanguloSession", rectanguloSession);
+
+            // Asignación al alcance APPLICATION (global mientras el servidor esté levantado)
+            ServletContext application = request.getServletContext();
+            application.setAttribute("rectanguloApplication", rectanguloApplication);
+
+            // Mensaje de confirmación
+            request.setAttribute("mensaje", "Las variables fueron agregadas");
+
+            // Redirección interna hacia index.jsp
+            request.getRequestDispatcher("index.jsp").forward(request, response);
+
+        } else if ("listarVariables".equals(accion)) {
+
+            // Redirección hacia JSP que mostrará las variables de cada alcance
+            request.getRequestDispatcher("/META-INF/alcanceVariables.jsp").forward(request, response);
+
+        } else {
+
+            // Acción no válida o no enviada → regreso a index.jsp
+            request.setAttribute("mensaje", "Accion no proporcionada o desconocida");
+            request.getRequestDispatcher("index.jsp").forward(request, response);
+        }
+    }
+
+    // Delegación de método GET hacia processRequest
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
+
+    // Delegación de método POST hacia processRequest
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
+
+    // Información general del servlet
     @Override
     public String getServletInfo() {
-        return "Short description";
+        return "Servlet controlador para manejar variables en request, session y application";
     }
-
-
 }
